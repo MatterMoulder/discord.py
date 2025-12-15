@@ -722,40 +722,10 @@ class HTTPClient:
                                 )
 
                             retry_after: float = data['retry_after']
-                            if self.max_ratelimit_timeout and retry_after > self.max_ratelimit_timeout:
-                                _log.warning(
-                                    'We are being rate limited. %s %s responded with 429. Timeout of %.2f was too long, erroring instead.',
-                                    method,
-                                    url,
-                                    retry_after,
-                                )
-                                raise RateLimited(retry_after)
 
-                            fmt = 'We are being rate limited. %s %s responded with 429. Retrying in %.2f seconds.'
+                            fmt = 'Rate limited: %s %s returned 429. Timeout: %.2f seconds.'
                             _log.warning(fmt, method, url, retry_after)
-
-                            _log.debug(
-                                'Rate limit is being handled by bucket hash %s with %r major parameters',
-                                bucket_hash,
-                                route.major_parameters,
-                            )
-
-                            # check if it's a global rate limit
-                            is_global = data.get('global', False)
-                            if is_global:
-                                _log.warning('Global rate limit has been hit. Retrying in %.2f seconds.', retry_after)
-                                self._global_over.clear()
-
-                            await asyncio.sleep(retry_after)
-                            _log.debug('Done sleeping for the rate limit. Retrying...')
-
-                            # release the global lock now that the
-                            # global rate limit has passed
-                            if is_global:
-                                self._global_over.set()
-                                _log.debug('Global rate limit is now over.')
-
-                            continue
+                            raise RateLimited(retry_after)
 
                         # we've received a 500, 502, 504, or 524, unconditional retry
                         if response.status in {500, 502, 504, 524}:
