@@ -166,7 +166,7 @@ class RateLimited(DiscordException):
 
     def __init__(self, retry_after: float):
         self.retry_after = retry_after
-        super().__init__(f'Too many requests. Retry in {retry_after:.2f} seconds.')
+        super().__init__(f"RateLimited: cooldown={retry_after:.2f}s (aborted)")
 
 
 class Forbidden(HTTPException):
